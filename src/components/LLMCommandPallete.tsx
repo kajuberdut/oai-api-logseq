@@ -6,10 +6,10 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command"
-import { convertToFlashCardCurrentBlock, DivideTaskIntoSubTasksCurrentBlock, summarizePage, summarizeBlock } from "@/ollama";
+import { convertToFlashCardCurrentBlock, DivideTaskIntoSubTasksCurrentBlock, summarizePage, summarizeBlock } from "@/llm";
 import { PromptAI } from "./PromptAI";
 
-export function OllamaCommandPallete({ options, theme }: { options: string[], theme: string }) {
+export function LLMCommandPallete({ options, theme }: { options: string[], theme: string }) {
   const [selection, setSelection] = useState('')
   const [isEnterPressed, setIsEnterPressed] = useState(false);
   const handleSelection = (selection: string) => {

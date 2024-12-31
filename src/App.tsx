@@ -1,11 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
-import { OllamaCommandPallete } from "./components/OllamaCommandPallete";
+import { LLMCommandPallete } from "./components/LLMCommandPallete";
 import {
   convertToFlashCardFromEvent,
   DivideTaskIntoSubTasksFromEvent,
-  ollamaUI,
+  llmUI,
   promptFromBlockEventClosure
-} from "./ollama";
+} from "./llm";
 import { useAppVisible } from "./utils";
 
 const options = [
@@ -46,31 +46,31 @@ function App() {
       return
     }
 
-    logseq.Editor.getPageBlocksTree("ollama-logseq-config").then((blocks) => {
+    logseq.Editor.getPageBlocksTree("oai-api-logseq-config").then((blocks) => {
       blocks!.forEach((block) => {
-        logseq.Editor.getBlockProperty(block.uuid, "ollama-context-menu-title").then((title) => {
-          logseq.Editor.getBlockProperty(block.uuid, "ollama-prompt-prefix").then((prompt_prefix) => {
+        logseq.Editor.getBlockProperty(block.uuid, "oai-api-context-menu-title").then((title) => {
+          logseq.Editor.getBlockProperty(block.uuid, "oai-api-prompt-prefix").then((prompt_prefix) => {
             logseq.Editor.registerBlockContextMenuItem(title, promptFromBlockEventClosure(prompt_prefix))
           })
         }).catch((reason) => {
         })
       })
     }).catch((reason) => {
-      console.error("Can not find the configuration page named 'ollama-logseq-config'", reason)
+      console.error("Can not find the configuration page named 'oai-api-logseq-config'", reason)
     })
 
 
-    logseq.Editor.registerSlashCommand("ollama", ollamaUI)
-    logseq.Editor.registerBlockContextMenuItem("Ollama: Create a flash card", convertToFlashCardFromEvent)
-    logseq.Editor.registerBlockContextMenuItem("Ollama: Divide into subtasks", DivideTaskIntoSubTasksFromEvent)
-    logseq.Editor.registerBlockContextMenuItem("Ollama: Prompt from Block", promptFromBlockEventClosure())
-    logseq.Editor.registerBlockContextMenuItem("Ollama: Custom prompt on Block", promptFromBlockEventClosure(logseq.settings.custom_prompt_block))
-    logseq.Editor.registerBlockContextMenuItem("Ollama: Summarize block", promptFromBlockEventClosure("Summarize: "))
-    logseq.Editor.registerBlockContextMenuItem("Ollama: Expand Block", promptFromBlockEventClosure("Expand: "))
+    logseq.Editor.registerSlashCommand("LLM", llmUI)
+    logseq.Editor.registerBlockContextMenuItem("LLM: Create a flash card", convertToFlashCardFromEvent)
+    logseq.Editor.registerBlockContextMenuItem("LLM: Divide into subtasks", DivideTaskIntoSubTasksFromEvent)
+    logseq.Editor.registerBlockContextMenuItem("LLM: Prompt from Block", promptFromBlockEventClosure())
+    logseq.Editor.registerBlockContextMenuItem("LLM: Custom prompt on Block", promptFromBlockEventClosure(logseq.settings.custom_prompt_block))
+    logseq.Editor.registerBlockContextMenuItem("LLM: Summarize block", promptFromBlockEventClosure("Summarize: "))
+    logseq.Editor.registerBlockContextMenuItem("LLM: Expand Block", promptFromBlockEventClosure("Expand: "))
 
     logseq.App.registerCommandShortcut(
       { "binding": logseq.settings.shortcut },
-      ollamaUI
+      llmUI
     );
   }, [])
 
@@ -85,7 +85,7 @@ function App() {
         }}
       >
         <div ref={innerRef} className="flex items-center justify-center w-screen">
-          <OllamaCommandPallete options={options} theme={theme} />
+          <LLMCommandPallete options={options} theme={theme} />
         </div>
       </main>
     );

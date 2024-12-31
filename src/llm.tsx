@@ -4,7 +4,7 @@ import { BlockEntity, BlockUUIDTuple } from "@logseq/libs/dist/LSPlugin.user";
 const delay = (t = 100) => new Promise(r => setTimeout(r, t))
 
 
-export async function ollamaUI() {
+export async function llmUI() {
   logseq.showMainUI()
   setTimeout(() => {
     const element = document.querySelector(".ai-input") as HTMLInputElement | null;
@@ -67,14 +67,14 @@ export async function getPageContentFromBlock(b: BlockEntity): Promise<string> {
   return blockContents.join(" ");
 }
 
-type OllamaGenerateParameters = {
+type LLMGenerateParameters = {
   model?: string;
   [key: string]: any;
 }
 
-async function ollamaGenerate(prompt: string, parameters?: OllamaGenerateParameters) {
+async function modelGenerate(prompt: string, parameters?: LLMGenerateParameters) {
   if (!logseq.settings) {
-    throw new Error("Couldn't find ollama-logseq settings")
+    throw new Error("Couldn't find oai-api-logseq settings")
   }
 
   let params = parameters || {};
@@ -93,14 +93,14 @@ async function ollamaGenerate(prompt: string, parameters?: OllamaGenerateParamet
       body: JSON.stringify(params)
     })
     if (!response.ok) {
-      logseq.UI.showMsg("Coudln't fulfill request make sure that ollama service is running and make sure there is no typo in host or model name")
-      throw new Error("Error in Ollama request: " + response.statusText)
+      logseq.UI.showMsg("Coudln't fulfill request make sure that API reachable and make sure there is no typo in host or model name")
+      throw new Error("Error in request: " + response.statusText)
     }
     const data = await response.json()
     return data
   } catch (e: any) {
     console.error("ERROR: ", e)
-    logseq.App.showMsg("Coudln't fulfill request make sure that ollama service is running and make sure there is no typo in host or model name")
+    logseq.App.showMsg("Coudln't fulfill request make sure that API is reachable and make sure there is no typo in host or model name")
   }
 }
 
@@ -121,15 +121,15 @@ async function promptLLM(prompt: string) {
       }),
     })
     if (!response.ok) {
-      logseq.App.showMsg("Coudln't fulfill request make sure that ollama service is running and make sure there is no typo in host or model name")
-      throw new Error("Error in Ollama request: " + response.statusText)
+      logseq.App.showMsg("Coudln't fulfill request make sure that API is reachable and make sure there is no typo in host or model name")
+      throw new Error("Error in request: " + response.statusText)
     }
     const data = await response.json();
 
     return data.response;
   } catch (e: any) {
     console.error("ERROR: ", e)
-    logseq.App.showMsg("Coudln't fulfill request make sure that ollama service is running and make sure there is no typo in host or model name")
+    logseq.App.showMsg("Coudln't fulfill request make sure that API is reachable and make sure there is no typo in host or model name")
   }
 }
 
@@ -194,33 +194,33 @@ export async function summarizeBlock() {
 
 
 
-async function getOllamaParametersFromBlockProperties(b: BlockEntity) {
+async function getModelParametersFromBlockProperties(b: BlockEntity) {
   const properties = await logseq.Editor.getBlockProperties(b.uuid);
-  const ollamaParameters: OllamaGenerateParameters = {}
-  const prefix = 'ollamaGenerate'
+  const modelParameters: LLMGenerateParameters = {}
+  const prefix = 'modelGenerate'
   for (const property in properties) {
     if (property.startsWith(prefix)) {
       const key = property.replace(prefix, '').toLowerCase()
-      ollamaParameters[key] = properties[property]
+      modelParameters[key] = properties[property]
     }
   }
-  return ollamaParameters
+  return modelParameters
 }
 
-async function getOllamaParametersFromBlockAndParentProperties(b: BlockEntity) {
-  let ollamaParentProperties: OllamaGenerateParameters = {}
+async function getModelParametersFromBlockAndParentProperties(b: BlockEntity) {
+  let modelParentProperties: LLMGenerateParameters = {}
   if (b.parent) {
     let parentBlock = await logseq.Editor.getBlock(b.parent.id)
     if (parentBlock)
-      ollamaParentProperties = await getOllamaParametersFromBlockProperties(parentBlock)
+      modelParentProperties = await getModelParametersFromBlockProperties(parentBlock)
   }
-  const ollamaBlockProperties = await getOllamaParametersFromBlockProperties(b)
-  return { ...ollamaParentProperties, ...ollamaBlockProperties }
+  const modelBlockProperties = await getModelParametersFromBlockProperties(b)
+  return { ...modelParentProperties, ...modelBlockProperties }
 }
 
 async function promptFromBlock(block: BlockEntity, prefix?: string) {
   const answerBlock = await logseq.Editor.insertBlock(block!.uuid, '🦙Generating ...', { before: false })
-  const params = await getOllamaParametersFromBlockAndParentProperties(block!)
+  const params = await getModelParametersFromBlockAndParentProperties(block!)
   const blockContent = await getTreeContent(block);
 
   // let prompt = block!.content.replace(/^.*::.*$/gm, '') // hack to remove properties from block content
@@ -230,11 +230,11 @@ async function promptFromBlock(block: BlockEntity, prefix?: string) {
     prompt = prefix + "\n" + prompt
   }
 
-  const result = await ollamaGenerate(prompt, params);
+  const result = await modelGenerate(prompt, params);
 
   //FIXME: work out the best way to story context
   if (params.usecontext) {
-    await logseq.Editor.upsertBlockProperty(block!.uuid, 'ollama-generate-context', result.context)
+    await logseq.Editor.upsertBlockProperty(block!.uuid, 'oai-api-generate-context', result.context)
   }
 
   await logseq.Editor.updateBlock(answerBlock!.uuid, `${result.response}`)
@@ -277,8 +277,8 @@ export async function askAI(prompt: string, context: string) {
 
 export async function convertToFlashCard(uuid: string, blockContent: string) {
   try {
-    const questionBlock = await logseq.Editor.insertBlock(uuid, "⌛Genearting question....", { before: false })
-    const answerBlock = await logseq.Editor.insertBlock(questionBlock!.uuid, "⌛Genearting answer....", { before: false })
+    const questionBlock = await logseq.Editor.insertBlock(uuid, "⌛Generating question....", { before: false })
+    const answerBlock = await logseq.Editor.insertBlock(questionBlock!.uuid, "⌛Generating answer....", { before: false })
     const question = await promptLLM(`Create a question for a flashcard. Provide the question only. Here is the knowledge to check:\n ${blockContent}`)
     const answer = await promptLLM(`Given the question ${question} and the context of ${blockContent} What is the answer? be as brief as possible and provide the answer only.`)
     await logseq.Editor.updateBlock(questionBlock!.uuid, `${question} #card`)
@@ -302,7 +302,7 @@ export async function convertToFlashCardCurrentBlock() {
 
 export async function DivideTaskIntoSubTasks(uuid: string, content: string) {
   try {
-    const block = await logseq.Editor.insertBlock(uuid, "✅ Genearting todos ...", { before: false })
+    const block = await logseq.Editor.insertBlock(uuid, "✅ ⌛Generating todos ...", { before: false })
     let i = 0;
     const response = await promptLLM(`Divide this task into subtasks with numbers: ${content} `)
     for (const todo of response.split("\n")) {

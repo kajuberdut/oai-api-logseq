@@ -7,7 +7,7 @@ import "./index.css";
 
 import { logseq as PL } from "../package.json";
 import { SettingSchemaDesc } from "@logseq/libs/dist/LSPlugin";
-import { ollamaUI } from "./ollama";
+import { llmUI } from "./llm";
 
 // @ts-expect-error
 const css = (t, ...args) => String.raw(t, ...args);
@@ -19,14 +19,14 @@ let settings: SettingSchemaDesc[] = [
     key: "host",
     type: "string",
     title: "Host",
-    description: "Set the host of your ollama model",
+    description: "Set the host of your Open AI Compatible API",
     default: "localhost:11434"
   },
   {
     key: "model",
     type: "string",
     title: "LLM Model",
-    description: "Set your desired model to use ollama",
+    description: "Set your desired model to use",
     default: "llama3.1:8b"
   },
   {
@@ -60,7 +60,7 @@ function main() {
   function createModel() {
     return {
       show() {
-        ollamaUI()
+        llmUI()
       },
     };
   }

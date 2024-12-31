@@ -1,5 +1,5 @@
 import React, { KeyboardEventHandler, useEffect, useState } from 'react'
-import { askAI, askWithContext, defineWord } from '../ollama';
+import { askAI, askWithContext, defineWord } from '../llm';
 import { Input } from '@/components/ui/input';
 
 export const PromptAI = ({ type, theme }: { type: string, theme: string }) => {

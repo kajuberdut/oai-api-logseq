@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 env:
-  PLUGIN_NAME: ollama-logseq
+  PLUGIN_NAME: oai-api-logseq
 
 jobs:
   build:

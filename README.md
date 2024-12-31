@@ -1,10 +1,16 @@
-# 🦙 ollama-logseq plugin
+# 🦙 oai-api-logseq plugin
 
-A plugin to integrate [ollama](https://github.com/jmorganca/ollama) with [logseq](https://github.com/logseq/logseq)
+This plugin forks [oai-api-logseq plugin](https://github.com/omagdy7/oai-api-logseq). The only intentional change of this fork is to suppor the use of Open AI (henceforth OAI) compatible API instead of Ollama.
+
+### Isn't Ollama good enough?
+Ollama's use of `.model` files -- instead of seamlessly supporting the `.GGUF` model files of it's underlying inference engine -- and it's API variance from other projects is enough to make forking worthwhile.a
 
 # Get Started
-- First you will need to setup [ollama](https://github.com/jmorganca/ollama) you can check their github repo for instructions on how to setup ollama
-- That's it once you setup ollama you should be able to use the plugin with no problem
+- First you will need to setup an openAI compatible API.
+  - [LLaMA.cpp](https://github.com/ggerganov/llama.cpp/blob/master/examples/server/README.md)
+  - [tabbyAPI](https://github.com/theroyallab/tabbyAPI)
+
+  **NOTE:** Do not open issues if with oai-api-logseq plugin github if you cannot host an OAI compatible API, assistance with that is outside of the scope of this work.
 
 # Features
 - The plugin currently has 6 commands
@@ -27,40 +33,40 @@ A plugin to integrate [ollama](https://github.com/jmorganca/ollama) with [logseq
 - Button in tool bar
 - Settings for changing the host of the model, the model itself and a shortcut to open the plugin command palette
 - Block properties to select model
-- Use configuration page `ollama-logseq-config` to add more context manual commands
+- Use configuration page `oai-api-logseq-config` to add more context manual commands
 
 ## Block Properties
-Ollama offers many different models to choose from for various of tasks. This feature configures model on the per block base and the attribute is also used by its immediate children while using context menu commands for blocks. The properties are named after the [Ollama's generate API](https://github.com/jmorganca/ollama/blob/main/docs/api.md#generate-a-completion) and currently, only the `model` is used. Add the `ollama-generate-model:: model_name` at the end of the block to specify the model to use for the block and its immediate children. 
+Ollama offers many different models to choose from for various of tasks. This feature configures model on the per block base and the attribute is also used by its immediate children while using context menu commands for blocks. The properties are named after the [Ollama's generate API](https://github.com/jmorganca/ollama/blob/main/docs/api.md#generate-a-completion) and currently, only the `model` is used. Add the `oai-api-generate-model:: model_name` at the end of the block to specify the model to use for the block and its immediate children. 
 ```
 Write a SciFi story of Shanghai 2050. 
-ollama-generate-model:: deepseek-llm:7b-chat
+oai-api-generate-model:: deepseek-llm:7b-chat
 ```
 Currently, three context menu commands would be affected by this properties.
-- Ollama: Prompt from Block
-- Ollama: Summarize Block
-- Ollama: Expand Block 
+- LLM: Prompt from Block
+- LLM: Summarize Block
+- LLM: Expand Block 
 
 ![block-properties](./docs/block-properties.png)
 
-## Configuration Page `ollama-logseq-config`
-The plugin also reads the page `ollama-logseq-config` to add more context commands. The page should be a markdown page with the following format.
+## Configuration Page `oai-api-logseq-config`
+The plugin also reads the page `oai-api-logseq-config` to add more context commands. The page should be a markdown page with the following format.
 
 ```
-ollama-context-menu-title:: Ollama: Extract Keywords
-ollama-prompt-prefix:: Extract 10 keywords from the following:
+oai-api-context-menu-title:: Ollama: Extract Keywords
+oai-api-prompt-prefix:: Extract 10 keywords from the following:
 ```
 
 ![config-page](./docs/config-page.png)
 
 Each one of the block with these two properties will create a new context menu command after restarting logseq. The prefix is added in front of the text of the block when the command is invokved on the block. 
 ![contxt-menu](./docs/block-contxt-menu.gif)
+
 # Demo
 ![demo](./docs/demo.gif)
 ![summary](./docs/summary.gif)
 ![context](./docs/context.gif)
 
-
 # Contribution
-If you have any features suggestions feel free to open an issue
+If you have any features suggestions please check the [upstream project](https://github.com/omagdy7/oai-api-logseq)
 
->If this plugin helps you, I'd really appreciate your support. You can [buy me a coffee here. ](https://www.buymeacoffee.com/omagdy)
+>If this plugin helps you, please go ahead and support the upstream creator of oai-api-logseq plugin. You can [buy them a coffee here. ](https://www.buymeacoffee.com/omagdy)
