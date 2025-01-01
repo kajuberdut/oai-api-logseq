@@ -67,6 +67,6 @@ Each one of the block with these two properties will create a new context menu c
 ![context](./docs/context.gif)
 
 # Contribution
-If you have any features suggestions please check the [upstream project](https://github.com/omagdy7/oai-api-logseq)
+If you have any features suggestions please check the [upstream project](https://github.com/omagdy7/ollama-logseq)
 
->If this plugin helps you, please go ahead and support the upstream creator of oai-api-logseq plugin. You can [buy them a coffee here. ](https://www.buymeacoffee.com/omagdy)
+>If this plugin helps you, please go ahead and support the upstream creator of the ollama-logseq plugin. You can [buy them a coffee here. ](https://www.buymeacoffee.com/omagdy)
