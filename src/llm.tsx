@@ -68,6 +68,7 @@ export async function getPageContentFromBlock(b: BlockEntity): Promise<string> {
 
 type LLMGenerateParameters = {
   model?: string;
+  n_predict?: number;
   [key: string]: any;
 };
 
@@ -81,7 +82,7 @@ async function modelGenerate(prompt: string, parameters?: LLMGenerateParameters)
     params.model = logseq.settings.model;
   }
   params.prompt = prompt;
-  params.stream = false;
+  params.n_predict = params.n_predict || 200;
 
   try {
     const headers: Record<string, string> = {
@@ -91,22 +92,22 @@ async function modelGenerate(prompt: string, parameters?: LLMGenerateParameters)
       headers["Authorization"] = `Bearer ${logseq.settings.apiKey}`;
     }
 
-    const response = await fetch("http://${logseq.settings.host}/completion", {
+    const response = await fetch(`http://${logseq.settings.host}/completion`, {
       method: "POST",
       headers,
       body: JSON.stringify(params),
     });
 
     if (!response.ok) {
-      logseq.UI.showMsg("Couldn't fulfill request. Check API key and model configuration.");
-      throw new Error("Error in request: " + response.statusText);
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const data = await response.json();
     return data.content.trim();
   } catch (e: any) {
-    console.error("ERROR: ", e);
-    logseq.UI.showMsg("Couldn't fulfill request. Ensure API is reachable and configuration is correct.");
+    console.error("Error during fetch request:", e);
+    logseq.UI.showMsg(`Error: ${e.message}`, "error");
+    throw e;
   }
 }
 
@@ -210,6 +211,16 @@ export async function convertToFlashCard(uuid: string, blockContent: string) {
   }
 }
 
+export async function convertToFlashCardFromEvent(b: IHookEvent) {
+  const currentBlock = await logseq.Editor.getBlock(b.uuid);
+  await convertToFlashCard(currentBlock!.uuid, currentBlock!.content);
+}
+
+export async function convertToFlashCardCurrentBlock() {
+  const currentBlock = await logseq.Editor.getCurrentBlock();
+  await convertToFlashCard(currentBlock!.uuid, currentBlock!.content);
+}
+
 export async function DivideTaskIntoSubTasks(uuid: string, content: string) {
   try {
     const block = await logseq.Editor.insertBlock(uuid, "✅ ⌛Generating todos ...", { before: false });
@@ -227,4 +238,31 @@ export async function DivideTaskIntoSubTasks(uuid: string, content: string) {
     logseq.App.showMsg(e.toString(), "warning");
     console.error(e);
   }
+}
+
+export async function DivideTaskIntoSubTasksFromEvent(b: IHookEvent) {
+  const currentBlock = await logseq.Editor.getBlock(b.uuid);
+  DivideTaskIntoSubTasks(currentBlock!.uuid, currentBlock!.content);
+}
+
+export async function DivideTaskIntoSubTasksCurrentBlock() {
+  const currentBlock = await logseq.Editor.getCurrentBlock();
+  DivideTaskIntoSubTasks(currentBlock!.uuid, currentBlock!.content);
+}
+
+export function promptFromBlockEventClosure(prefix?: string) {
+  return async (event: IHookEvent) => {
+    try {
+      const currentBlock = await logseq.Editor.getBlock(event.uuid);
+      const blockContent = await getTreeContent(currentBlock!);
+      const prompt = prefix ? `${prefix}\n${blockContent}` : blockContent;
+      const answerBlock = await logseq.Editor.insertBlock(currentBlock!.uuid, "⌛Generating...", { before: false });
+
+      const response = await promptLLM(prompt);
+      await logseq.Editor.updateBlock(answerBlock!.uuid, response);
+    } catch (e: any) {
+      logseq.App.showMsg(e.toString(), "warning");
+      console.error(e);
+    }
+  };
 }
