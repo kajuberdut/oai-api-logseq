@@ -1,6 +1,6 @@
 # 🦙 oai-api-logseq plugin
 
-This plugin forks [oai-api-logseq plugin](https://github.com/omagdy7/oai-api-logseq). The only intentional change of this fork is to suppor the use of Open AI (henceforth OAI) compatible API instead of Ollama.
+This plugin forks [ollama-logseq plugin](https://github.com/omagdy7/ollama-logseq). The only intentional change of this fork is to suppor the use of Open AI (henceforth OAI) compatible API instead of Ollama.
 
 ### Isn't Ollama good enough?
 Ollama's use of `.model` files -- instead of seamlessly supporting the `.GGUF` model files of it's underlying inference engine -- and it's API variance from other projects is enough to make forking worthwhile.a
