@@ -211,7 +211,7 @@ const formatRegistry: Record<string, () => FormatDict> = {
     gemma2
 };
 
-function getFormatDict(formatName: string): AdvancedFormat {
+export function getFormatDict(formatName: string): AdvancedFormat {
     const formatFunction = formatRegistry[formatName];
     if (!formatFunction) {
         throw new Error(`Format '${formatName}' is not defined.`);
