@@ -12,6 +12,20 @@ const MESSAGES = {
   generatingTodos: "✅ ⌛Generating todos ...",
 };
 
+const apiConfig = {
+  host: () => logseq.settings?.host || "localhost",
+  apiKey: () => logseq.settings?.apiKey || "",
+  model: () => logseq.settings?.model || "default-model",
+};
+
+function getHeaders() {
+  const headers = { "Content-Type": "application/json" };
+  if (apiConfig.apiKey()) {
+    headers["Authorization"] = `Bearer ${apiConfig.apiKey()}`;
+  }
+  return headers;
+}
+
 export async function llmUI() {
   logseq.showMainUI();
   setTimeout(() => {
@@ -96,32 +110,22 @@ async function* modelGenerate(
 
   let params = parameters || {};
   if (params.model === undefined) {
-    params.model = logseq.settings.model;
+    params.model = apiConfig.model();
   }
   params.prompt = prompt;
   params.n_predict = params.n_predict || 200;
   params.stream = true;
 
   try {
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-    };
-    if (logseq.settings.apiKey && logseq.settings.apiKey.trim()) {
-      headers["Authorization"] = `Bearer ${logseq.settings.apiKey}`;
-    }
-
     if (debugLevel >= 0) {
       console.debug("Parameters sent to API:", params);
     }
 
-    const response = await fetch(
-      `http://${logseq.settings.host}/v1/completions`,
-      {
-        method: "POST",
-        headers,
-        body: JSON.stringify(params),
-      }
-    );
+    const response = await fetch(`http://${apiConfig.host()}/v1/completions`, {
+      method: "POST",
+      headers: getHeaders(),
+      body: JSON.stringify(params),
+    });
 
     if (debugLevel >= 1) {
       console.debug("Response:", response);
