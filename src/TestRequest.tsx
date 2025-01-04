@@ -88,7 +88,7 @@ const logseq = {
   settings: {
     model: "phi3",
     apiKey: null,
-    host: "192.168.0.105:8080",
+    host: "localhost:8080",
   },
   UI: {
     showMsg: (message: string, type: "info" | "error" | "success") => {
@@ -175,6 +175,8 @@ async function* modelGenerate(
           // Only yield content if it's a valid JSON object and has the desired structure
           if (jsonChunk.choices) {
             yield jsonChunk.choices[0].text;
+          } else if (jsonChunk.content) {
+            yield jsonChunk.content
           }
         } catch (error) {
           if (debugLevel >= 1) {

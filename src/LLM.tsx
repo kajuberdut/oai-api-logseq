@@ -89,6 +89,8 @@ async function* modelGenerate(
           // Only yield content if it's a valid JSON object and has the desired structure
           if (jsonChunk.choices) {
             yield jsonChunk.choices[0].text;
+          } else if (jsonChunk.content) {
+            yield jsonChunk.content
           }
         } catch (error) {
           if (debugLevel >= 1) {
