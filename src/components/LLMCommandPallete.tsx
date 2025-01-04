@@ -6,31 +6,33 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command"
-import { convertToFlashCardCurrentBlock, DivideTaskIntoSubTasksCurrentBlock, summarizePage, summarizeBlock } from "@/llm";
+import { TaskHandlers } from "@/TaskHandlers";
 import { PromptAI } from "./PromptAI";
 
 export function LLMCommandPallete({ options, theme }: { options: string[], theme: string }) {
   const [selection, setSelection] = useState('')
   const [isEnterPressed, setIsEnterPressed] = useState(false);
+  const taskHandlers = new TaskHandlers(); // Create an instance of TaskHandlers
+  
   const handleSelection = (selection: string) => {
     setSelection(selection)
     setIsEnterPressed(true);
     switch (selection) {
       case "divide into subtasks":
         logseq.hideMainUI()
-        DivideTaskIntoSubTasksCurrentBlock()
+        taskHandlers.DivideTaskIntoSubTasksCurrentBlock()
         break;
       case "summarize page":
         logseq.hideMainUI()
-        summarizePage()
+        taskHandlers.summarizePage()
         break;
       case "summarize block":
         logseq.hideMainUI()
-        summarizeBlock()
+        taskHandlers.summarizeBlock()
         break;
       case "convert to flash card":
         logseq.hideMainUI()
-        convertToFlashCardCurrentBlock()
+        taskHandlers.convertToFlashCardCurrentBlock()
         break;
       default:
         break;

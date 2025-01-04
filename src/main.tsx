@@ -7,7 +7,7 @@ import "./index.css";
 
 import { logseq as PL } from "../package.json";
 import { SettingSchemaDesc } from "@logseq/libs/dist/LSPlugin";
-import { llmUI } from "./llm";
+import { llmUI } from "./UI";
 
 // @ts-expect-error
 const css = (t, ...args) => String.raw(t, ...args);
