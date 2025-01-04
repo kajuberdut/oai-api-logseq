@@ -3,6 +3,15 @@ import { BlockEntity, BlockUUIDTuple } from "@logseq/libs/dist/LSPlugin.user";
 
 const delay = (t = 100) => new Promise((r) => setTimeout(r, t));
 
+const MESSAGES = {
+  summarizingPage: "⌛ Summarizing Page....",
+  summarizingBlock: "⌛Summarizing Block...",
+  generating: "⌛Generating....",
+  generatingQuestion: "⌛Generating question....",
+  generatingAnswer: "⌛Generating answer....",
+  generatingTodos: "✅ ⌛Generating todos ...",
+};
+
 export async function llmUI() {
   logseq.showMainUI();
   setTimeout(() => {
@@ -239,7 +248,7 @@ export async function summarizePage() {
       }
       lastBlock = await logseq.Editor.insertBlock(
         lastBlock.uuid,
-        "⌛ Summarizing Page....",
+        MESSAGES.summarizingPage,
         { before: true }
       );
       const summary = await promptLLM(
@@ -264,7 +273,7 @@ export async function summarizeBlock() {
     const currentBlock = await logseq.Editor.getCurrentBlock();
     let summaryBlock = await logseq.Editor.insertBlock(
       currentBlock!.uuid,
-      "⌛Summarizing Block...",
+      MESSAGES.summarizingBlock,
       { before: false }
     );
     const summary = await promptLLM(
@@ -286,13 +295,13 @@ export async function askAI(prompt: string, context: string) {
     if (currentBlock?.content.trim() === "") {
       block = await logseq.Editor.insertBlock(
         currentBlock!.uuid,
-        "⌛Generating....",
+        MESSAGES.generating,
         { before: true }
       );
     } else {
       block = await logseq.Editor.insertBlock(
         currentBlock!.uuid,
-        "⌛Generating....",
+        MESSAGES.generating,
         { before: false }
       );
     }
@@ -313,12 +322,12 @@ export async function convertToFlashCard(uuid: string, blockContent: string) {
   try {
     const questionBlock = await logseq.Editor.insertBlock(
       uuid,
-      "⌛Generating question....",
+      MESSAGES.generatingQuestion,
       { before: false }
     );
     const answerBlock = await logseq.Editor.insertBlock(
       questionBlock!.uuid,
-      "⌛Generating answer....",
+      MESSAGES.generatingAnswer,
       { before: false }
     );
     const question = await promptLLM(
@@ -350,7 +359,7 @@ export async function DivideTaskIntoSubTasks(uuid: string, content: string) {
   try {
     const block = await logseq.Editor.insertBlock(
       uuid,
-      "✅ ⌛Generating todos ...",
+      MESSAGES.generatingTodos,
       { before: false }
     );
     let i = 0;
@@ -391,7 +400,7 @@ export function promptFromBlockEventClosure(prefix?: string) {
       const prompt = prefix ? `${prefix}\n${blockContent}` : blockContent;
       const answerBlock = await logseq.Editor.insertBlock(
         currentBlock!.uuid,
-        "⌛Generating...",
+        MESSAGES.generating,
         { before: false }
       );
 
