@@ -1,5 +1,5 @@
 import type { IHookEvent } from "@logseq/libs/dist/LSPlugin.user";
-import { safeExecuteDecorator } from "./Decorators";
+import { logAndHandleErrorDecorator } from "./Decorators";
 import { delay, getTreeContent } from "./Helpers";
 import { promptLLM } from "./LLM";
 
@@ -13,21 +13,37 @@ const MESSAGES = {
 };
 
 export class TaskHandlers {
-  @safeExecuteDecorator("Failed to summarize page")
+  @logAndHandleErrorDecorator("Failed to summarize page")
   async summarizePage() {
+    await this.commonSummarize(
+      async () => await logseq.Editor.getCurrentPageBlocksTree(),
+      MESSAGES.summarizingPage
+    );
+  }
+
+  @logAndHandleErrorDecorator("Failed to summarize block")
+  async summarizeBlock() {
+    await this.commonSummarize(
+      async () => [await logseq.Editor.getCurrentBlock()],
+      MESSAGES.summarizingBlock
+    );
+  }
+
+  async commonSummarize(
+    fetchBlocks: () => Promise<any>,
+    initialMessage: string
+  ) {
     await delay(300);
-    const currentSelectedBlocks =
-      await logseq.Editor.getCurrentPageBlocksTree();
+    const blocks = await fetchBlocks();
     let blocksContent = "";
-    if (currentSelectedBlocks) {
-      let lastBlock: any =
-        currentSelectedBlocks[currentSelectedBlocks.length - 1];
-      for (const block of currentSelectedBlocks) {
+    if (blocks) {
+      let lastBlock = blocks[blocks.length - 1];
+      for (const block of blocks) {
         blocksContent += block.content + "\n";
       }
       lastBlock = await logseq.Editor.insertBlock(
         lastBlock.uuid,
-        MESSAGES.summarizingPage,
+        initialMessage,
         { before: true }
       );
       const summary = await promptLLM(
@@ -43,27 +59,13 @@ export class TaskHandlers {
     }
   }
 
-  @safeExecuteDecorator("Failed to summarize block")
-  async summarizeBlock() {
-    const currentBlock = await logseq.Editor.getCurrentBlock();
-    const summaryBlock = await logseq.Editor.insertBlock(
-      currentBlock!.uuid,
-      MESSAGES.summarizingBlock,
-      { before: false }
-    );
-    const summary = await promptLLM(
-      `Summarize the following:\n${currentBlock!.content}`
-    );
-    await logseq.Editor.updateBlock(summaryBlock!.uuid, `Summary: ${summary}`);
-  }
-
-  @safeExecuteDecorator("Failed to define word")
+  @logAndHandleErrorDecorator("Failed to define word")
   async defineWord(word: string) {
     const prompt = `Define the word: ${word}`;
     await this.askAI(prompt, "");
   }
 
-  @safeExecuteDecorator("Failed to convert to flashcard")
+  @logAndHandleErrorDecorator("Failed to convert to flashcard")
   async convertToFlashCard(uuid: string, blockContent: string) {
     const questionBlock = await logseq.Editor.insertBlock(
       uuid,
@@ -86,7 +88,7 @@ export class TaskHandlers {
     await logseq.Editor.updateBlock(answerBlock!.uuid, answer);
   }
 
-  @safeExecuteDecorator("Failed to divide task into subtasks")
+  @logAndHandleErrorDecorator("Failed to divide task into subtasks")
   async DivideTaskIntoSubTasks(uuid: string, content: string) {
     const block = await logseq.Editor.insertBlock(
       uuid,
@@ -109,7 +111,7 @@ export class TaskHandlers {
     }
   }
 
-  @safeExecuteDecorator("Failed to ask with context")
+  @logAndHandleErrorDecorator("Failed to ask with context")
   async askWithContext(prompt: string, contextType: string) {
     let blocksContent = "";
     if (contextType === "page") {
@@ -124,7 +126,7 @@ export class TaskHandlers {
     await this.askAI(prompt, `Context: ${blocksContent}`);
   }
 
-  @safeExecuteDecorator("Failed to ask AI")
+  @logAndHandleErrorDecorator("Failed to ask AI")
   async askAI(prompt: string, context: string) {
     const currentBlock = await logseq.Editor.getCurrentBlock();
     let block = null;
@@ -150,19 +152,19 @@ export class TaskHandlers {
     await logseq.Editor.updateBlock(block!.uuid, `${prompt}\n${response}`);
   }
 
-  @safeExecuteDecorator("Failed to convert current block to flashcard")
+  @logAndHandleErrorDecorator("Failed to convert current block to flashcard")
   async convertToFlashCardCurrentBlock() {
     const currentBlock = await logseq.Editor.getCurrentBlock();
     await this.convertToFlashCard(currentBlock!.uuid, currentBlock!.content);
   }
 
-  @safeExecuteDecorator("Failed to convert flashcard from event")
+  @logAndHandleErrorDecorator("Failed to convert flashcard from event")
   async convertToFlashCardFromEvent(b: IHookEvent) {
     const currentBlock = await logseq.Editor.getBlock(b.uuid);
     await this.convertToFlashCard(currentBlock!.uuid, currentBlock!.content);
   }
 
-  @safeExecuteDecorator("Failed to divide task from event")
+  @logAndHandleErrorDecorator("Failed to divide task from event")
   async DivideTaskIntoSubTasksFromEvent(b: IHookEvent) {
     const currentBlock = await logseq.Editor.getBlock(b.uuid);
     await this.DivideTaskIntoSubTasks(
@@ -171,7 +173,7 @@ export class TaskHandlers {
     );
   }
 
-  @safeExecuteDecorator("Failed to divide task in current block")
+  @logAndHandleErrorDecorator("Failed to divide task in current block")
   async DivideTaskIntoSubTasksCurrentBlock() {
     const currentBlock = await logseq.Editor.getCurrentBlock();
     await this.DivideTaskIntoSubTasks(
@@ -180,7 +182,7 @@ export class TaskHandlers {
     );
   }
 
-  @safeExecuteDecorator("Failed to execute prompt from block event")
+  @logAndHandleErrorDecorator("Failed to execute prompt from block event")
   promptFromBlockEventClosure(prefix?: string) {
     return async (event: IHookEvent) => {
       const currentBlock = await logseq.Editor.getBlock(event.uuid);

@@ -1,22 +1,16 @@
-import { apiConfig, getHeaders } from "./Config";
+export {}
 
-export async function promptLLM(
-  prompt: string,
-  parameters?: LLMGenerateParameters,
-  debugLevel: number = 0, // 0 for none, 1 for basic, > 1 for full
-  callback?: (result: string) => void // Callable invoked with the current state after each chunk
-) {
-  let result = "";
-  for await (const chunk of modelGenerate(prompt, parameters, debugLevel)) {
-    if (chunk) {
-      result += chunk;
-      if (callback) {
-        callback(result);
-      }
-    }
-  }
-  return result;
-}
+const logseq = {
+  settings: {
+    apiKey: null,
+    host: "localhost:8080",
+  },
+  UI: {
+    showMsg: (message: string, type: "info" | "error" | "success") => {
+      console.log(`UI Message [${type}]: ${message}`);
+    },
+  },
+};
 
 type LLMGenerateParameters = {
   model?: string;
@@ -36,6 +30,7 @@ async function* modelGenerate(
   }
 
   let params = parameters || {};
+
   params.prompt = prompt;
   params.n_predict = params.n_predict || 200;
   params.stream = true;
@@ -45,15 +40,15 @@ async function* modelGenerate(
       "Content-Type": "application/json",
     };
 
-    if (debugLevel >= 0) {
+    if (debugLevel >= 1) {
       console.debug("Parameters sent to API:", params);
     }
 
     const response = await fetch(
-      `http://${apiConfig.host()}/v1/completions`,
+      `http://${logseq.settings.host}/v1/completions`,
       {
         method: "POST",
-        headers: getHeaders(),
+        headers,
         body: JSON.stringify(params),
       }
     );
@@ -119,9 +114,79 @@ async function* modelGenerate(
         }
       }
     }
-  } catch (e: any) {
+  } catch (e) {
     console.error("Error during fetch request:", e);
-    logseq.UI.showMsg(`Error: ${e.message}`, "error");
     throw e;
   }
 }
+
+async function promptLLM(
+  prompt: string,
+  parameters?: LLMGenerateParameters,
+  debugLevel: number = 0, // 0 for none, 1 for basic, > 1 for full
+  callback?: (result: string) => void // Callable invoked with each result chunk
+) {
+  let result = "";
+  for await (const chunk of modelGenerate(prompt, parameters, debugLevel)) {
+    if (chunk) {
+      result += chunk;
+      if (callback) {
+        callback(chunk); // Invoke the callback with the current chunk
+      }
+    }
+  }
+  return result;
+}
+
+/**
+ * Renders the provided template with the given context.
+ * @param context - The context object containing variables for the template.
+ * @returns The rendered template output.
+ */
+export function renderTemplate(context: Record<string, any>): string {
+  try {
+      // Render the template with the provided context
+      return nunjucks.renderString(template, context);
+  } catch (error) {
+      if (typeof error === 'object' && error !== null && 'message' in error) {
+          return `Error: ${(error as Error).message}`;
+      } else {
+          return 'An unknown error occurred.';
+      }
+  }
+}
+
+// Example usage
+const context = {
+  bos_token: '<BOS>',
+  messages: [
+      { role: 'user', content: 'Hello!' },
+      { role: 'assistant', content: 'Hi there!' },
+  ],
+  add_generation_prompt: true,
+};
+
+console.log(renderTemplate(context));
+
+
+// Creating an instance of the type
+const params: LLMGenerateParameters = {
+  n_predict: 20,
+  temperature: 0.7,
+};
+
+(async () => {
+
+  let prompt = "Please say 'yellow'";
+
+  try {
+    const result = await promptLLM(prompt, params, 2, (chunk) => {
+      console.log("Chunk received:", chunk); // Log each chunk
+    });
+    console.log("LLM Response:", result);
+  } catch (e) {
+    console.error("Failed to get LLM response:", e);
+  }
+})();
+
+// clear && tsc ./src/TestRequest.tsx --skipLibCheck && node ./src/TestRequest.js

@@ -70,7 +70,7 @@ function main() {
     zIndex: 11,
   });
 
-  const openIconName = "ollama-ui-open";
+  const openIconName = "oai-api-ui-open";
 
 
   logseq.provideStyle(css`

@@ -1,4 +1,4 @@
-export function safeExecuteDecorator(errorMsg: string = "An error occurred") {
+export function logAndHandleErrorDecorator(errorMsg: string = "An error occurred") {
   return function (
     target: any, 
     propertyKey: string | symbol, 
@@ -10,9 +10,9 @@ export function safeExecuteDecorator(errorMsg: string = "An error occurred") {
       try {
         return await originalMethod.apply(this, args);
       } catch (e) {
-        logseq.App.showMsg(errorMsg, "warning");
+        logseq.UI.showMsg(errorMsg, "warning");
         console.error(e);
-        throw e; // Optional: rethrow if needed elsewhere
+        throw e;
       }
     };
 
